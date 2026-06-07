@@ -6,6 +6,12 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib as mpl
+# Prefer Poppins for matplotlib (falls back to system fonts if unavailable)
+mpl.rcParams.update({
+    'font.family': 'sans-serif',
+    'font.sans-serif': ['Poppins', 'DejaVu Sans', 'Arial']
+})
 import seaborn as sns
 import os
 
@@ -28,7 +34,7 @@ st.set_page_config(
 # ── Custom CSS ────────────────────────────────────────────
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
 html, body, [class*="css"] {
     font-family: 'Poppins', sans-serif;
@@ -64,10 +70,10 @@ html, body, [class*="css"] {
     border-radius: 50%;
 }
 .hero-title {
-    font-family: 'Space Mono', monospace;
+    font-family: 'Poppins', sans-serif;
     font-size: 2.2rem;
     font-weight: 700;
-    color: #60a5fa;
+    color: #ffffff;
     margin: 0 0 0.4rem 0;
     letter-spacing: -0.5px;
 }
@@ -95,7 +101,7 @@ html, body, [class*="css"] {
     border: 1px solid #ef4444;
     border-radius: 50px;
     padding: 0.5rem 1.5rem;
-    font-family: 'Space Mono', monospace;
+    font-family: 'Poppins', sans-serif;
     font-size: 1.1rem;
     font-weight: 700;
     letter-spacing: 2px;
@@ -107,7 +113,7 @@ html, body, [class*="css"] {
     border: 1px solid #10b981;
     border-radius: 50px;
     padding: 0.5rem 1.5rem;
-    font-family: 'Space Mono', monospace;
+    font-family: 'Poppins', sans-serif;
     font-size: 1.1rem;
     font-weight: 700;
     letter-spacing: 2px;
@@ -136,7 +142,7 @@ html, body, [class*="css"] {
     text-align: center;
 }
 .metric-value {
-    font-family: 'Space Mono', monospace;
+    font-family: 'Poppins', sans-serif;
     font-size: 2rem;
     font-weight: 700;
     color: #60a5fa;
@@ -152,7 +158,7 @@ html, body, [class*="css"] {
 
 /* Section headers */
 .section-title {
-    font-family: 'Space Mono', monospace;
+    font-family: 'Poppins', sans-serif;
     font-size: 0.7rem;
     letter-spacing: 3px;
     text-transform: uppercase;
@@ -168,8 +174,13 @@ html, body, [class*="css"] {
     border: 1px solid #1e2a45 !important;
     border-radius: 10px !important;
     color: #e8eaf0 !important;
+    caret-color: #e8eaf0 !important;
     font-family: 'Poppins', sans-serif !important;
     font-size: 0.95rem !important;
+}
+.stTextArea textarea::placeholder {
+    color: #9ca3af !important;
+    opacity: 1 !important;
 }
 .stTextArea textarea:focus {
     border-color: #3b82f6 !important;
@@ -185,7 +196,7 @@ html, body, [class*="css"] {
     font-family: 'Poppins', sans-serif !important;
     font-weight: 600 !important;
     font-size: 0.95rem !important;
-    padding: 0.6rem 2rem !important;
+    padding: 0.6rem 1rem !important;
     transition: all 0.2s ease !important;
     width: 100% !important;
 }
@@ -199,19 +210,20 @@ html, body, [class*="css"] {
 .stTabs [data-baseweb="tab-list"] {
     background: #111827;
     border-radius: 10px;
-    gap: 4px;
-    padding: 4px;
+    gap: 20px;
+    padding: 10px;
 }
 .stTabs [data-baseweb="tab"] {
     background: transparent !important;
     color: #6b7280 !important;
     border-radius: 8px !important;
-    font-family: 'DM Sans', sans-serif !important;
+    font-family: 'Poppins', sans-serif !important;
     font-weight: 500 !important;
 }
 .stTabs [aria-selected="true"] {
     background: #1e2a45 !important;
     color: #60a5fa !important;
+    padding: 10px;
 }
 
 /* Table */
@@ -472,8 +484,8 @@ with st.sidebar:
     st.markdown("""
     <div style='text-align:center; padding: 1rem 0 1.5rem;'>
         <div style='font-size:2.8rem; margin-bottom:0.3rem;'>🛡️</div>
-        <div style='font-family: Space Mono, monospace; font-size:0.9rem;
-                    color:#60a5fa; letter-spacing:2px;'>SPAM DETECTOR</div>
+        <div style='font-family: Poppins, sans-serif; font-size:0.9rem;
+                color:#60a5fa; letter-spacing:2px;'>SPAM DETECTOR</div>
         <div style='font-size:0.7rem; color:#4b5563; margin-top:0.2rem;'>
             Naive Bayes + TF-IDF
         </div>
@@ -515,6 +527,23 @@ with st.sidebar:
     st.markdown("<div class='section-title'>Appearance</div>", unsafe_allow_html=True)
     theme_choice = st.radio("Theme", ("Black", "White"), index=0, key="theme_choice")
 
+# Apply theme overrides chosen in the sidebar (Black or White)
+theme = st.session_state.get("theme_choice", "Black")
+if theme == "White":
+    bg = "#ffffff"
+    text = "#000000"
+    card = "#f3f4f6"
+    sidebar_bg = "#f8fafc"
+    btn_bg = "#000000"
+    btn_text = "#ffffff"
+else:
+    bg = "#0a0e1a"
+    text = "#e8eaf0"
+    card = "#111827"
+    sidebar_bg = "#0f1424"
+    btn_bg = "linear-gradient(135deg, #1d4ed8, #2563eb)"
+    btn_text = "#ffffff"
+
 # ── Main content ──────────────────────────────────────────
 st.markdown("""
 <div class='hero'>
@@ -539,28 +568,30 @@ with tab1:
 
         email_input = st.text_area(
             label="",
+            value=st.session_state.get("email_input", ""),
             placeholder="Paste or type your email content here...\n\nExample: Congratulations! You have won a FREE iPhone. Click here to claim now!",
             height=220,
+            key="email_input",
             label_visibility="collapsed"
         )
 
         st.markdown("<br>", unsafe_allow_html=True)
         analyse_btn = st.button("Analyse Email", use_container_width=True)
 
-        st.markdown("<div class='section-title' style='margin-top:1.5rem;'>Quick Examples</div>", unsafe_allow_html=True)
+        st.markdown("<div class='section-title' style='margin-top:1.2rem;'>Quick Examples</div>", unsafe_allow_html=True)
         examples = {
             "🚨 Typical Spam": "Congratulations! You have won a FREE iPhone. Click here to claim your prize now! Limited time offer.",
             "✉️ Normal Email": "Hi Sarah, just checking if we are still on for the meeting tomorrow at 3pm. Let me know if the time works.",
             "⚠️ Phishing": "URGENT: Your account has been compromised. Call 08712460324 immediately to verify your details.",
             "📅 Work Email": "Can you please send me the updated project files before Friday? Thank you so much.",
         }
-        for label, text in examples.items():
-            if st.button(label, key=label):
-                st.session_state["example_text"] = text
-                st.rerun()
 
-        if "example_text" in st.session_state:
-            email_input = st.session_state["example_text"]
+        def _set_example(val):
+            st.session_state["email_input"] = val
+
+        ex_cols = st.columns(len(examples))
+        for c, (label, example_text) in zip(ex_cols, examples.items()):
+            c.button(label, key=f"example_{label}", on_click=_set_example, args=(example_text,))
 
     with col_result:
         st.markdown("<div class='section-title'>Result</div>", unsafe_allow_html=True)
@@ -585,8 +616,8 @@ with tab1:
             <div style='margin-top:1.2rem;'>
                 <div style='display:flex; justify-content:space-between; margin-bottom:4px;'>
                     <span style='font-size:0.8rem; color:#6b7280;'>Confidence</span>
-                    <span style='font-family: Space Mono, monospace; font-size:0.85rem;
-                                 color:#e8eaf0; font-weight:700;'>{conf:.1f}%</span>
+                    <span style='font-family: Poppins, sans-serif; font-size:0.85rem;
+                                 color:{text}; font-weight:700;'>{conf:.1f}%</span>
                 </div>
                 <div class='conf-bar-wrap'>
                     <div class='conf-bar-fill'
@@ -607,14 +638,14 @@ with tab1:
             <div style='margin-top:1.2rem; display:flex; gap:0.8rem;'>
                 <div style='flex:1; background:#111827; border:1px solid #1e2a45;
                             border-radius:10px; padding:0.8rem; text-align:center;'>
-                    <div style='font-family:Space Mono,monospace; font-size:1.1rem;
+                    <div style='font-family:Poppins, sans-serif; font-size:1.1rem;
                                 color:#60a5fa;'>{prob[1]*100:.1f}%</div>
                     <div style='font-size:0.7rem; color:#6b7280; margin-top:3px;'>
                         Spam probability</div>
                 </div>
                 <div style='flex:1; background:#111827; border:1px solid #1e2a45;
                             border-radius:10px; padding:0.8rem; text-align:center;'>
-                    <div style='font-family:Space Mono,monospace; font-size:1.1rem;
+                    <div style='font-family:Poppins, sans-serif; font-size:1.1rem;
                                 color:#34d399;'>{prob[0]*100:.1f}%</div>
                     <div style='font-size:0.7rem; color:#6b7280; margin-top:3px;'>
                         Ham probability</div>
@@ -663,25 +694,65 @@ with tab2:
 
     col_cm, col_roc = st.columns(2, gap="large")
 
-    dark_bg = "#0a0e1a"
+    # Use theme colors so plots remain readable in both light and dark themes
+    dark_bg = bg
     ax_color = "#374151"
-    text_color = "#9ca3af"
+    text_color = text
 
     with col_cm:
         st.markdown("<div class='section-title'>Confusion Matrix</div>", unsafe_allow_html=True)
         fig, ax = plt.subplots(figsize=(5, 4))
         fig.patch.set_facecolor(dark_bg)
         ax.set_facecolor(dark_bg)
-        sns.heatmap(cm, annot=True, fmt="d", cmap="Blues",
+        hm = sns.heatmap(cm, annot=False, fmt="d", cmap="Blues",
                     xticklabels=["Ham","Spam"],
                     yticklabels=["Ham","Spam"],
-                    linewidths=0.5, ax=ax,
-                    annot_kws={"size":14, "weight":"bold", "color":"white"})
+                    linewidths=0.8, linecolor=ax_color, ax=ax,
+                    cbar_kws={"shrink": 0.65, "pad": 0.02})
+
+        # Style tick labels (ensure Poppins and visible color)
+        for lbl in ax.get_xticklabels() + ax.get_yticklabels():
+            lbl.set_color(text_color)
+            lbl.set_fontfamily('Poppins')
+            lbl.set_fontsize(10)
+
+        # Configure colorbar ticks/labels to match theme
+        try:
+            cbar = hm.collections[0].colorbar
+            cbar.ax.yaxis.set_tick_params(color=text_color)
+            for t in cbar.ax.get_yticklabels():
+                t.set_color(text_color)
+                t.set_fontfamily('Poppins')
+            cbar.outline.set_edgecolor(ax_color)
+            cbar.ax.patch.set_edgecolor(ax_color)
+        except Exception:
+            pass
+
+        # Annotate cells with contrasting text colors for readability
+        cmap = plt.get_cmap("Blues")
+        norm = mpl.colors.Normalize(vmin=np.min(cm), vmax=np.max(cm))
+        light_text = "white"
+        dark_text = "#000000" if theme == "White" else "#0a0e1a"
+        for (i, j), val in np.ndenumerate(cm):
+            rgba = cmap(norm(val))  # (r,g,b,a) in 0-1
+            r, g, b, _ = rgba
+            luminance = 0.299 * r + 0.587 * g + 0.114 * b
+            ann_color = light_text if luminance < 0.5 else dark_text
+            ax.text(j + 0.5, i + 0.5, str(val),
+                ha="center", va="center", color=ann_color,
+                fontsize=14, fontweight="bold")
+
         ax.set_xlabel("Predicted", color=text_color, fontsize=10)
         ax.set_ylabel("Actual", color=text_color, fontsize=10)
         ax.tick_params(colors=text_color)
+
+        # Emphasize the axes box so it stands out against the background
         for spine in ax.spines.values():
             spine.set_edgecolor(ax_color)
+            spine.set_linewidth(1.2)
+        ax.patch.set_edgecolor(ax_color)
+        ax.patch.set_linewidth(1.2)
+
         plt.tight_layout()
         st.pyplot(fig, use_container_width=True)
         plt.close()
@@ -699,8 +770,8 @@ with tab2:
         ax.set_xlabel("False Positive Rate", color=text_color, fontsize=10)
         ax.set_ylabel("True Positive Rate", color=text_color, fontsize=10)
         ax.tick_params(colors=text_color)
-        ax.legend(facecolor="#111827", edgecolor="#1e2a45",
-                  labelcolor=text_color, fontsize=10)
+        ax.legend(facecolor=card, edgecolor="#1e2a45",
+              labelcolor=text_color, fontsize=10)
         for spine in ax.spines.values():
             spine.set_edgecolor(ax_color)
         plt.tight_layout()
@@ -719,12 +790,12 @@ with tab2:
         ax.set_facecolor(dark_bg)
         colors_bar = ["#10b981", "#ef4444"]
         bars = ax.bar(counts.index, counts.values, color=colors_bar,
-                      edgecolor="#0a0e1a", linewidth=1.5, width=0.5)
+                  edgecolor=bg, linewidth=1.5, width=0.5)
         for bar, val in zip(bars, counts.values):
             ax.text(bar.get_x() + bar.get_width()/2,
-                    bar.get_height() + 1, str(val),
-                    ha="center", va="bottom",
-                    fontsize=12, fontweight="bold", color="white")
+                bar.get_height() + 1, str(val),
+                ha="center", va="bottom",
+                fontsize=12, fontweight="bold", color=text_color)
         ax.tick_params(colors=text_color)
         ax.set_ylabel("Count", color=text_color, fontsize=10)
         for spine in ax.spines.values():
