@@ -229,8 +229,8 @@ html, body, [class*="css"] {
 /* Table */
 .stDataFrame { border-radius: 10px; overflow: hidden; }
 
-/* Hide Streamlit branding */
-#MainMenu, footer, header { visibility: hidden; }
+/* Hide Streamlit branding but keep header so sidebar toggle remains visible */
+#MainMenu, footer { visibility: hidden; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -483,7 +483,7 @@ model, vectorizer, df, accuracy, cm, report, fpr, tpr, roc_auc = train_model()
 with st.sidebar:
     st.markdown("""
     <div style='text-align:center; padding: 1rem 0 1.5rem;'>
-        <div style='font-size:2.8rem; margin-bottom:0.3rem;'>🛡️</div>
+        <div style='font-size:2.8rem; margin-bottom:0.3rem;'></div>
         <div style='font-family: Poppins, sans-serif; font-size:0.9rem;
                 color:#60a5fa; letter-spacing:2px;'>SPAM DETECTOR</div>
         <div style='font-size:0.7rem; color:#4b5563; margin-top:0.2rem;'>
@@ -547,7 +547,7 @@ else:
 # ── Main content ──────────────────────────────────────────
 st.markdown("""
 <div class='hero'>
-    <div class='hero-title'>🛡️ Email Spam Classifier</div>
+    <div class='hero-title'>Email Spam Classifier</div>
     <div class='hero-sub'>
         AI-powered detection using Multinomial Naive Bayes &amp; TF-IDF &nbsp;·&nbsp;
         Python &amp; Scikit-learn
