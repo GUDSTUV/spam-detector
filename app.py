@@ -547,7 +547,7 @@ else:
 # ── Main content ──────────────────────────────────────────
 st.markdown("""
 <div class='hero'>
-    <div class='hero-title'>Email Spam Classifier</div>
+    <div class='hero-title'>Email Spam DETECTOR</div>
     <div class='hero-sub'>
         AI-powered detection using Multinomial Naive Bayes &amp; TF-IDF &nbsp;·&nbsp;
         Python &amp; Scikit-learn
