@@ -6,6 +6,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import os
+import base64
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
@@ -122,10 +123,21 @@ def train_model():
 
 model, vectorizer, df, accuracy, cm, report, fpr, tpr, roc_auc = train_model()
 
+def get_base64_of_bin_file(bin_file):
+    if os.path.exists(bin_file):
+        with open(bin_file, 'rb') as f:
+            data = f.read()
+        return base64.b64encode(data).decode()
+    return ""
+
+logo_b64 = get_base64_of_bin_file("logo.png")
+logo_html = f'<img src="data:image/png;base64,{logo_b64}" width="80" style="margin-bottom:10px; border-radius:12px; box-shadow: 0 4px 14px rgba(0,255,136,0.2);">' if logo_b64 else ""
+
 # ── Sidebar ───────────────────────────────────────────────
 with st.sidebar:
-    st.markdown("""
+    st.markdown(f"""
     <div style='text-align:center; padding: 1rem 0 1.5rem;'>
+        {logo_html}
         <div style='font-size:1.2rem; font-weight:700; color:#ffffff; letter-spacing:1px;'>SPAM DETECTOR</div>
     </div>
     
@@ -138,7 +150,7 @@ with st.sidebar:
     """, unsafe_allow_html=True)
 
 # ── Hero ──────────────────────────────────────────────────
-st.markdown("""
+st.markdown(f"""
 <div class='hero'>
     <div class='hero-title'>Email Spam Detector</div>
     <div class='hero-sub'>
@@ -149,89 +161,84 @@ st.markdown("""
 
 tab1, tab2 = st.tabs(["  🔍  Detect Spam  ", "  📋  Batch Test  "])
 
+@st.dialog("Analysis Result")
+def show_result_dialog(email_text):
+    tfidf   = vectorizer.transform([email_text])
+    pred    = model.predict(tfidf)[0]
+    prob    = model.predict_proba(tfidf)[0]
+    conf    = max(prob) * 100
+    is_spam = pred == 1
+    if is_spam:
+        st.markdown("<div class='badge-spam'>⚠ SPAM DETECTED</div>", unsafe_allow_html=True)
+        bar_color = "#ff4444"
+        verdict   = "This email shows strong indicators of spam. Do not click any links or provide personal information."
+    else:
+        st.markdown("<div class='badge-ham'>✓ LEGITIMATE EMAIL</div>", unsafe_allow_html=True)
+        bar_color = "#00ff88"
+        verdict   = "This email appears to be legitimate. The classifier found no significant spam indicators."
+    st.markdown(f"""
+    <div style='margin-top:1.2rem;'>
+        <div style='display:flex; justify-content:space-between; margin-bottom:4px;'>
+            <span style='font-size:0.8rem; color:#888888;'>Confidence</span>
+            <span style='font-size:0.85rem; color:#ffffff; font-weight:700;'>{conf:.1f}%</span>
+        </div>
+        <div class='conf-bar-wrap'>
+            <div class='conf-bar-fill' style='width:{conf}%; background:{bar_color};'></div>
+        </div>
+    </div>
+    <div style='background:#0a0a0a; border:1px solid #222222; border-radius:8px;
+                padding:1rem; margin-top:1rem; font-size:0.85rem; color:#aaaaaa; line-height:1.6;'>
+        {verdict}
+    </div>
+    <div style='margin-top:1.2rem; display:flex; gap:0.8rem;'>
+        <div style='flex:1; background:#000000; border:1px solid #222222;
+                    border-radius:8px; padding:0.8rem; text-align:center;'>
+            <div style='font-size:1.1rem; color:#ff4444;'>{prob[1]*100:.1f}%</div>
+            <div style='font-size:0.7rem; color:#888888; margin-top:3px;'>Spam probability</div>
+        </div>
+        <div style='flex:1; background:#000000; border:1px solid #222222;
+                    border-radius:8px; padding:0.8rem; text-align:center;'>
+            <div style='font-size:1.1rem; color:#00ff88;'>{prob[0]*100:.1f}%</div>
+            <div style='font-size:0.7rem; color:#888888; margin-top:3px;'>Ham probability</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    st.markdown("<br>", unsafe_allow_html=True)
+    if st.button("Close", key="close_dialog", use_container_width=True):
+        st.rerun()
+
 # ──────────────────────────────────────────────────────────
 # TAB 1 — DETECT SPAM
 # ──────────────────────────────────────────────────────────
 with tab1:
-    col_input, col_result = st.columns([3, 2], gap="large")
+    st.markdown("<div class='section-title'>Paste Email Content</div>", unsafe_allow_html=True)
+    email_input = st.text_area(
+        label="",
+        value=st.session_state.get("email_input", ""),
+        placeholder="Paste or type your email content here...\n\nExample: Congratulations! You have won a FREE iPhone. Click here to claim now!",
+        height=220, key="email_input", label_visibility="collapsed"
+    )
+    st.markdown("<br>", unsafe_allow_html=True)
+    analyse_btn = st.button("Analyse Email", use_container_width=True)
 
-    with col_input:
-        st.markdown("<div class='section-title'>Paste Email Content</div>", unsafe_allow_html=True)
-        email_input = st.text_area(
-            label="",
-            value=st.session_state.get("email_input", ""),
-            placeholder="Paste or type your email content here...\n\nExample: Congratulations! You have won a FREE iPhone. Click here to claim now!",
-            height=220, key="email_input", label_visibility="collapsed"
-        )
-        st.markdown("<br>", unsafe_allow_html=True)
-        analyse_btn = st.button("Analyse Email", use_container_width=True)
-
-        st.markdown("<div class='section-title' style='margin-top:1.2rem;'>Quick Examples</div>", unsafe_allow_html=True)
-        examples = {
-            "🚨 Typical Spam": "Congratulations! You have won a FREE iPhone. Click here to claim your prize now! Limited time offer.",
-            "✉️ Normal Email":  "Hi Sarah, just checking if we are still on for the meeting tomorrow at 3pm. Let me know if the time works.",
-            "⚠️ Phishing":      "URGENT: Your account has been compromised. Call 08712460324 immediately to verify your details.",
-            "📅 Work Email":    "Can you please send me the updated project files before Friday? Thank you so much.",
-        }
-        def _set_example(val):
-            st.session_state["email_input"] = val
-        ex_cols = st.columns(len(examples))
-        for c, (label, example_text) in zip(ex_cols, examples.items()):
-            c.button(label, key=f"example_{label}", on_click=_set_example, args=(example_text,))
-
-    with col_result:
-        st.markdown("<div class='section-title'>Result</div>", unsafe_allow_html=True)
-        if analyse_btn and email_input.strip():
-            tfidf   = vectorizer.transform([email_input])
-            pred    = model.predict(tfidf)[0]
-            prob    = model.predict_proba(tfidf)[0]
-            conf    = max(prob) * 100
-            is_spam = pred == 1
-            if is_spam:
-                st.markdown("<div class='badge-spam'>⚠ SPAM DETECTED</div>", unsafe_allow_html=True)
-                bar_color = "#ff4444"
-                verdict   = "This email shows strong indicators of spam. Do not click any links or provide personal information."
-            else:
-                st.markdown("<div class='badge-ham'>✓ LEGITIMATE EMAIL</div>", unsafe_allow_html=True)
-                bar_color = "#00ff88"
-                verdict   = "This email appears to be legitimate. The classifier found no significant spam indicators."
-            st.markdown(f"""
-            <div style='margin-top:1.2rem;'>
-                <div style='display:flex; justify-content:space-between; margin-bottom:4px;'>
-                    <span style='font-size:0.8rem; color:#888888;'>Confidence</span>
-                    <span style='font-size:0.85rem; color:#ffffff; font-weight:700;'>{conf:.1f}%</span>
-                </div>
-                <div class='conf-bar-wrap'>
-                    <div class='conf-bar-fill' style='width:{conf}%; background:{bar_color};'></div>
-                </div>
-            </div>
-            <div style='background:#0a0a0a; border:1px solid #222222; border-radius:8px;
-                        padding:1rem; margin-top:1rem; font-size:0.85rem; color:#aaaaaa; line-height:1.6;'>
-                {verdict}
-            </div>
-            <div style='margin-top:1.2rem; display:flex; gap:0.8rem;'>
-                <div style='flex:1; background:#000000; border:1px solid #222222;
-                            border-radius:8px; padding:0.8rem; text-align:center;'>
-                    <div style='font-size:1.1rem; color:#ff4444;'>{prob[1]*100:.1f}%</div>
-                    <div style='font-size:0.7rem; color:#888888; margin-top:3px;'>Spam probability</div>
-                </div>
-                <div style='flex:1; background:#000000; border:1px solid #222222;
-                            border-radius:8px; padding:0.8rem; text-align:center;'>
-                    <div style='font-size:1.1rem; color:#00ff88;'>{prob[0]*100:.1f}%</div>
-                    <div style='font-size:0.7rem; color:#888888; margin-top:3px;'>Ham probability</div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-        elif analyse_btn:
-            st.warning("Please enter some email text first.")
+    if analyse_btn:
+        if email_input.strip():
+            show_result_dialog(email_input)
         else:
-            st.markdown("""
-            <div style='text-align:center; padding:3rem 1rem; color:#374151;'>
-                <div style='font-size:3rem; margin-bottom:0.8rem;'>📨</div>
-                <div style='font-size:0.9rem;'>Paste an email and click<br>
-                <b style='color:#4b5563;'>Analyse Email</b> to get a result</div>
-            </div>
-            """, unsafe_allow_html=True)
+            st.warning("Please enter some email text first.")
+
+    st.markdown("<div class='section-title' style='margin-top:1.2rem;'>Quick Examples</div>", unsafe_allow_html=True)
+    examples = {
+        "🚨 Typical Spam": "Congratulations! You have won a FREE iPhone. Click here to claim your prize now! Limited time offer.",
+        "✉️ Normal Email":  "Hi Sarah, just checking if we are still on for the meeting tomorrow at 3pm. Let me know if the time works.",
+        "⚠️ Phishing":      "URGENT: Your account has been compromised. Call 08712460324 immediately to verify your details.",
+        "📅 Work Email":    "Can you please send me the updated project files before Friday? Thank you so much.",
+    }
+    def _set_example(val):
+        st.session_state["email_input"] = val
+    ex_cols = st.columns(len(examples))
+    for c, (label, example_text) in zip(ex_cols, examples.items()):
+        c.button(label, key=f"example_{label}", on_click=_set_example, args=(example_text,))
 
 # ──────────────────────────────────────────────────────────
 # TAB 2 — BATCH TEST
